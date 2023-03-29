@@ -1,0 +1,6 @@
+LAPTOP_ROOT=/mnt/c/Users/hanks/Documents/GitHub/cpsc5330-s23
+DOCKER_DIRECTORY=/weekly-code
+IMAGE=hanksseattleu/bda_class_image:latest
+DOCKER_SHELL=bash
+
+docker run -it -v $LAPTOP_ROOT/$1:$DOCKER_DIRECTORY $IMAGE $DOCKER_SHELL

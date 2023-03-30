@@ -1,1 +1,5 @@
-docker run -it hanksseattleu/bda_class_image:latest bash
+IMAGE=hanksseattleu/bda_class_image:latest
+DOCKER_SHELL=bash
+
+docker run -it $IMAGE $DOCKER_SHELL
+

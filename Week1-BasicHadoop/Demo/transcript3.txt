@@ -1,0 +1,88 @@
+###  This transcript is about running Word Count in Hadoop.
+###  We looked at the code in WordCount.java, and noticed that
+###  the mapper works like our script to split lines.
+###  The reducer is different.  Our Linux reducer was getting *all* (word, count)
+###  records, and maintained a dictionary of  word: count.   In MapReduce, the
+###  reducer gets records just for a single key (word), so it's simpler.
+
+##  The process to total victory
+##    -- put our text files into HDFS
+##    -- run the MapReduce word count pointing it to input in HDFS, and giving it
+##        the location for the output
+##    -- the output is (word, count) pairs, but not sorted, and not the 10 most
+##        frequent, but we already know how to sort and select using the shell!
+
+# cd WordCountJava/
+# ls
+WordCount.java	compile-map-reduce  run-map-reduce
+
+##  compile-map-reduce is a shell script that just compiles our WordCount
+##   program and packages it up into a JAR (Java archive) file that gets sent
+##   to Hadoop
+
+
+##  WordCount.jar is our MapReduce program
+# compile-map-reduce WordCount
+# ls
+WordCount$IntSumReducer.class	 WordCount.class  WordCount.java      run-map-reduce
+WordCount$TokenizerMapper.class  WordCount.jar	  compile-map-reduce
+
+##  Make a directory to hold our books, and copy them from our local filesystem
+##  to HDFS
+# hdfs dfs -mkdir /data-input/books
+# hdfs dfs -put /data/textcorpora/* /data-input/books
+
+2023-03-31 03:20:39,310 INFO sasl.SaslDataTransferClient: SASL encryption trust check: localHostTrusted = false, remoteHostTrusted = false
+....
+
+##  Make a directory in HDFS to hold the output
+# hdfs dfs -mkdir /data-output
+
+### Please look at the run-map-reduce script so you know how to initiate a Hadoop job
+# run-map-reduce WordCount /data-input/books /data-output/wordcount
+2023-03-31 03:22:23,958 INFO impl.MetricsConfig: Loaded properties from hadoop-metrics2.properties
+    -- LOTS OF OUTPUT HERE --
+
+###  Now see what's in the HDFS output directory
+###  Generally you will see multiple "part files" each with a chunk of the output.
+###    You get the full output by concatenating all of the part files
+
+# hdfs dfs -ls /data-output/wordcount
+Found 2 items
+-rw-r--r--   1 root supergroup          0 2023-03-31 03:22 /data-output/wordcount/_SUCCESS
+-rw-r--r--   1 root supergroup    1387698 2023-03-31 03:22 /data-output/wordcount/part-r-00000
+
+###  What's in the part files?  Should be (word, count) pairs
+###  Remember these are weird words because we aren't stripping punctuation
+
+# hdfs dfs -cat /data-output/wordcount/part* | head
+
+"	10
+"'A	4
+"'Ah!	1
+"'Also	1
+"'And	1
+"'Are	1
+"'Aye,	1
+"'Aye?	1
+"'Best	1
+"'Better	1
+
+###  And now our final victory -- take our (word, count) pairs we got from
+###   MapReduce, and use our shell tools to sort and limit the results
+
+###  And yeah, if you compare the output from transcript2 (shell) to transcript3 (MapReduce)
+###  you'll see the results are exactly the same!
+
+# hdfs dfs -cat /data-output/wordcount/part* | sort -k 2 -r -n | head -n 10
+the	128399
+and	79780
+of	72216
+to	48404
+a	33621
+in	32579
+I	26822
+that	26627
+he	21823
+his	21036
+# 

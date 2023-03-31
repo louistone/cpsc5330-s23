@@ -1,0 +1,73 @@
+##########   First transcript, getting started -- up and running with the Docker container
+
+##  To begin, I start Ubuntu within Windows terminal
+
+## I have created a link to a Directory on my laptop where the local 
+## copy of my Github repository is.   I will use that directory as my "work area"
+
+hanks@Slaptop2:/home/hanks$ pwd
+/home/hanks
+hanks@Slaptop2:/home/hanks$ ls
+repo-home
+hanks@Slaptop2:/home/hanks$ ls -l repo-home
+lrwxrwxrwx 1 hanks hanks 48 Mar 22 14:23 repo-home -> /mnt/c/Users/hanks/Documents/Github/cpsc5330-s23
+hanks@Slaptop2:/home/hanks$ cd repo-home
+hanks@Slaptop2:/home/hanks/repo-home$ ls
+Docker  README.md  Week1-BasicHadoop  Week2-HadoopStreamingAndSqoop
+
+## I just followed the link, now my current directory is the directory where the course
+## repo is stored.  Now I want to start up a docker container with the class Docker image, 
+## and a mount point between my Windows filesystem and the Docker filesystem
+
+hanks@Slaptop2:/home/hanks/repo-home$ cd Docker
+hanks@Slaptop2:/home/hanks/repo-home/Docker$ ls
+README.txt  bda_class_image  run-image  run-image-with-mount
+
+## This is the script that starts the container with a mount point.
+## Notice I am linking the Laptop directory with a directory on the docker container
+## with the name /weekly-code
+
+hanks@Slaptop2:/home/hanks/repo-home/Docker$ more run-image-with-mount
+LAPTOP_ROOT=/mnt/c/Users/hanks/Documents/GitHub/cpsc5330-s23
+DOCKER_DIRECTORY=/weekly-code
+IMAGE=hanksseattleu/bda_class_image:latest
+DOCKER_SHELL=bash
+
+docker run -it -v $LAPTOP_ROOT/$1:$DOCKER_DIRECTORY $IMAGE $DOCKER_SHELL
+
+### Now I run the script, and expect the Docker image to start
+
+hanks@Slaptop2:/home/hanks/repo-home/Docker$ run-image-with-mount
+
+###  Beginning of A LOT of initialization log messages
+
+[ ok ] Starting OpenBSD Secure Shell server: sshd.
+2023-03-31 18:15:15,119 INFO namenode.NameNode: STARTUP_MSG:
+/************************************************************
+STARTUP_MSG: Starting NameNode
+
+
+Initialization script completed
+schemaTool completed
+
+## Looks like the container started OK.  Notice the shell prompt changed -- that's 
+## how I know I'm now talking to Docker container and not my laptop.
+
+##  I want to see if the mount point is there in /weekly-code
+
+root@b98dfb14329b:/# cd /
+root@b98dfb14329b:/# ls
+KEYS                          data                  etc          lib64  proc  srv  var
+apache-hive-3.1.2-bin.tar.gz  dev                   hadoop-data  media  root  sys  weekly-code
+bin                           docker-entrypoint.sh  home         mnt    run   tmp
+boot                          entrypoint.sh         lib          opt    sbin  usr
+
+##  I can now see that /weekly-code is a link to my local copy of the Github repo.
+##  (I could make the link to wherever I want, but that's where the files I want to 
+##  work with are located.
+
+root@b98dfb14329b:/# ls weekly-code
+Docker  README.md  Week1-BasicHadoop  Week2-HadoopStreamingAndSqoop
+root@b98dfb14329b:/#
+
+####  Now go to the next transcript where we start our real Big Data work!

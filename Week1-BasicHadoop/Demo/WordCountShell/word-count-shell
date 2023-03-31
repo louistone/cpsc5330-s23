@@ -1,0 +1,1 @@
+cat /data/textcorpora/bible-kjv.txt | python3 split-lines | python3 count-words | sort -k 2 -r -n | head -n 10

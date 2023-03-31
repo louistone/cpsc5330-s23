@@ -1,0 +1,124 @@
+###  We are working on computing word count, this transcript is building it
+###  using shell scripts
+
+##  Here is our text input
+# ls /data/textcorpora/
+austen-emma.txt        bible-kjv.txt	....
+
+## Look at the first few lines of the contents of one of the books
+
+# head /data/textcorpora/bryant-stories.txt
+[Stories to Tell to Children by Sara Cone Bryant 1918] 
+
+
+TWO LITTLE RIDDLES IN RHYME
+
+
+     There's a garden that I ken,
+     Full of little gentlemen;
+     Little caps of blue they wear,
+     And green ribbons, very fair.
+
+## Work area for our first version of word count.  The two files
+## are two easy Python scripts we will need.
+# ls
+count-words  split-lines
+
+####  The first piece of our solution is to generate a stream
+####  of lines taken from our documents.  Easy!
+
+# cat /data/textcorpora/bible-kjv.txt | head
+[The King James Bible]
+
+The Old Testament of the King James Bible
+
+The First Book of Moses:  Called Genesis
+
+
+1:1 In the beginning God created the heaven and the earth.
+
+1:2 And the earth was without form, and void; and darkness was upon
+
+####  Next step is to take those lines and generate words.
+####  Using the Python script split-lines to do that
+
+#####  First the trick to make the shell find files in the current directory
+
+# PATH=$PATH:.
+
+######  This fixes a problem we were having in class, see note in the repo
+# dos2unix split-lines
+dos2unix: converting file split-lines to Unix format...
+# dos2unix count-words 
+dos2unix: converting file count-words to Unix format...
+
+###  Now test the first part of the pipe -- split lines
+# cat /data/textcorpora/bible-kjv.txt | split-lines | head
+[The 1
+King 1
+James 1
+Bible] 1
+The 1
+Old 1
+Testament 1
+of 1
+the 1
+King 1
+Traceback (most recent call last):
+  File "./split-lines", line 9, in <module>
+    print(word + " " + str(1))
+BrokenPipeError: [Errno 32] Broken pipe
+
+#### The next piece is to use count-words to build a dictionary
+####  with the words and the counts.  Testing that piece ....
+
+# cat /data/textcorpora/bible-kjv.txt | split-lines | count-words | head -n 10
+chosen? 2
+sanctification, 2
+30:32 4
+33:50 1
+passages: 1
+feared 61
+followed 103
+Gilgal; 6
+Zachariah. 1
+treadeth 10
+Traceback (most recent call last):
+  File "./count-words", line 15, in <module>
+    print(word + " " + str(total))
+BrokenPipeError: [Errno 32] Broken pipe
+# 
+
+####   Now we have words and counts, and we sort.  Sort is a linux built-in,
+####   and the parameters are   -k 2 (sort on second field, the count),  -r (sort reverse order)
+####     and -n (sort the field in numeric order rather than alphabetic order
+
+# cat /data/textcorpora/bible-kjv.txt | split-lines | count-words | sort -k 2 -r -n | head -n 10
+the 62097
+and 38575
+of 34445
+to 13383
+And 12735
+that 12451
+in 12167
+shall 9760
+he 9508
+unto 8930
+
+####  And by the say, we can run the script on all the text by using a wildcard in the
+####    cat command.  Notice in this output the numbers are bigger, and the order a little
+####    different
+
+# cat /data/textcorpora/* | python3 split-lines | python3 count-words | sort -k 2 -r -n | head -n 10
+the 128399
+and 79780
+of 72216
+to 48404
+a 33621
+in 32579
+I 26822
+that 26627
+he 21823
+his 21036
+# cd ../
+

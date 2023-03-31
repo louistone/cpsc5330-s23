@@ -1,0 +1,55 @@
+Demo for Week 1
+
+1.  Git repository (pull)
+2.  Look at the Docker directory and two scripts
+3.  Pull Docker image
+3.  Start with link to Week1
+
+==========================================================
+Can we build word count using just Linux?
+
+Write 
+/data/textcorpora/bible-kjv.txt
+
+the 62097
+and 38575
+of 34445
+to 13383
+And 12735
+
+Pipeline
+  * create a pipeline with all the lines
+  * split each line into words
+  * accumulate words into a dictionary
+  * emit the dictionary so we have lines like above
+  * sort by count and select the top 5
+
+cat /data/textcorpora/bible-kjv.txt | split-lines | count-words | sort -k 2 -n -r | head -n 5
+
+Also note that we can as well get the whole corpus with a wildcard.
+
+==========================================================
+Word Count
+
+Now consider millions of books, millions of lines.   Why will our script break?
+  *  Time, processing all the lines
+  *  Memory, holding the whole dictionary
+
+Map -- split the books/lines into many little pieces.  Each piece takes (some) line, splits it into words, and emits (word,1)
+Reduce -- a reducer totals up the counts just for one word. 
+For example
+   "hello world"   emits (hello, 1) and (world, 1)
+   The reducer for world takes in [(world, 1), (world, 1), .... (world, 1)] and emits (world, total)
+   The combined output of all reducers is our dictionary 
+
+To run:
+ * HDFS -- create input and output directories
+ * Move the corpus to HDFS   -copyFromLocal
+ * Run the script, specifying input and output directories, and the mapper and recucer JAR
+ * Look at the output in HDFS -- explain part files
+ * Move to local -getmerge
+
+Finish it with plugging in the sort and head commands from the pipeline.
+
+
+

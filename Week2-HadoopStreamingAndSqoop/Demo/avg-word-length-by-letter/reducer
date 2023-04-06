@@ -1,0 +1,5 @@
+#!/usr/bin/python3
+
+#  Start with the code in word count reducer, but remember
+#   * this reducer is taking (wordtype, length)
+#   * and is computing the average

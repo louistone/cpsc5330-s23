@@ -2,7 +2,6 @@
 
 # First argument is directory with mapper and reducer. 
 # Second argument is input directory in HDFS.  Convention is relative to /input-data
-# Third argument is output directory in HDFS.  Convention is /output-data/appname
 
 hdfs dfs -rm -r /output-data/$1
 

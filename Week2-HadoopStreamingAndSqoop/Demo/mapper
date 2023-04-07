@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
-# LInes look like this:
-# sqoop import --connect jdbc:mysql://localhost/world --username training --password training --table City --target-dir
-
+# Input is lines from the City table, which look like this:
+# ID,city name, country code, district, population
 # 10,Tilburg,NLD,Noord-Brabant,193238
+#
+# We want country code and population only
 
 import sys
 import string

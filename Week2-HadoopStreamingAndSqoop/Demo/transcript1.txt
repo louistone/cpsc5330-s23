@@ -1,0 +1,108 @@
+########################################
+## Hadoop Streaming
+
+### First task, third version of word count, using hadoop streaming
+weekly-code/Week2-HadoopStreamingAndSqoop# cd Demo
+weekly-code/Week2-HadoopStreamingAndSqoop/Demo# ls
+avg-word-length-by-letter  country-avg-pop  run-hadoop-streaming  run-hadoop-streaming~  script.txt  word-count
+
+### We looked at the mapper and the reducer.  run-wordcount is a
+#### shell script for running a job using hadoop streaming
+weekly-code/Week2-HadoopStreamingAndSqoop/Demo# cd word-count
+weekly-code/Week2-HadoopStreamingAndSqoop/Demo/word-count# ls
+run-wordcount  word-count-mapper  word-count-reducer
+
+### Setup steps are exactly the same as for the Java version of hadoop
+
+# hdfs dfs -mkdir /input-data
+# hdfs dfs -put /data/textcorpora/ /input-data
+
+### Always good to make sure input and output directories are
+### properly set up
+# hdfs dfs -ls /input-data/textcorpora
+Found 18 items
+-rw-r--r--   1 root supergroup     903894 2023-04-07 02:31 /input-data/textcorpora/austen-emma.txt
+   ...
+   
+# hdfs dfs -mkdir /output-data
+
+# run-wordcount
+   ...
+2023-04-07 02:32:56,517 INFO streaming.StreamJob: Output directory: /output-data/word-count
+
+##  Output looks the same as previous versions ... good enough!
+# hdfs dfs -cat /output-data/word-count/part* | head
+2023-04-07 02:33:17,371 INFO sasl.SaslDataTransferClient: SASL encryption trust check: localHostTrusted = false, remoteHostTrusted = false
+a	33573
+aaron	320
+aaronites	2
+aarons	32
+ab	1
+aback	3
+abaddon	1
+abaft	2
+abagtha	1
+abana	1
+
+###  Next set up a command run-hadoop-streaming to run our jobs.
+###  It is based on "convention over configuration" -- by naming directories
+###  and files according to a convention, we can run a job with very few
+###  changes to the run script.
+###  The word-count-2 directory has the same code as the word-count we just
+###  wrote, but things are renamed according to the run-hadoop-streaming convention
+
+# cd ..
+# ls
+avg-word-length-by-letter  country-avg-pop  run-hadoop-streaming  script.txt  word-count
+# mkdir word-count-2
+# mv word-count/word-count-mapper word-count-2/mapper
+# mv word-count/word-count-reducer word-count-2/reducer
+# ls word-count-2
+mapper	reducer
+
+### Make sure text files are still there
+weekly-code/Week2-HadoopStreamingAndSqoop/Demo# hdfs dfs -ls /input-data
+Found 1 items
+drwxr-xr-x   - root supergroup          0 2023-04-07 02:31 /input-data/textcorpora
+
+### Run new version of word count -- easy!
+
+# run-hadoop-streaming word-count-2 textcorpora
+     ...
+2023-04-07 02:38:54,765 INFO streaming.StreamJob: Output directory: /output-data/word-count-2
+
+### Now by convention output is in /output-data/word-count-2.  Results should be the same
+# hdfs dfs -cat /output-data/word-count-2/part* | head
+2023-04-07 02:39:15,732 INFO sasl.SaslDataTransferClient: SASL encryption trust check: localHostTrusted = false, remoteHostTrusted = false
+a	33573
+aaron	320
+aaronites	2
+aarons	32
+ab	1
+aback	3
+abaddon	1
+abaft	2
+abagtha	1
+abana	1
+
+###  Then we did "average word length by letter" -- just a different
+###    problem to solve using map reduce.  The mapper tuple is different,
+###    and the reducer is taking an average rather than just counting
+###  Look at the README.txt file for the problem definition
+
+###  Remember the directory and file-naming conventions 
+# cd avg-word-length-by-letter/
+# ls
+README.txt  mapper  reducer
+# cd ..
+# run-hadoop-streaming avg-word-length-by-letter textcorpora
+     ...
+2023-04-07 02:57:48,738 INFO streaming.StreamJob: Output directory: /output-data/avg-word-length-by-letter
+
+###  Output says that the first letter of a word does not predict its length!
+# hdfs dfs -cat /output-data/avg-word-length-by-letter/part*
+
+early	4.17223793815644
+late	4.236346152534629
+middle	4.409617025816087
+

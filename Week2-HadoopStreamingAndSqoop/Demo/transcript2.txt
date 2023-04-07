@@ -1,0 +1,219 @@
+###  Begin looking at our database, which I got from this repository
+###   https://relational.fit.cvut.cz/dataset/World
+###  and I pre-loaded it as part of the Docker image initialization.
+###  I also created an account with full privileges
+
+### Mistake!  Mysql won't let you provide the password on the command line
+# mysql --user training --password training
+Enter password: 
+ERROR 1049 (42000): Unknown database 'training'
+
+# mysql --user training --password
+Enter password: 
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 48
+Server version: 10.1.48-MariaDB-0+deb9u2 Debian 9.13
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| world              |
++--------------------+
+4 rows in set (0.01 sec)
+
+MariaDB [(none)]> use world;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MariaDB [world]> show tables;
++-----------------+
+| Tables_in_world |
++-----------------+
+| City            |
+| Country         |
+| CountryLanguage |
++-----------------+
+3 rows in set (0.00 sec)
+
+MariaDB [world]> describe City;
++-------------+----------+------+-----+---------+----------------+
+| Field       | Type     | Null | Key | Default | Extra          |
++-------------+----------+------+-----+---------+----------------+
+| ID          | int(11)  | NO   | PRI | NULL    | auto_increment |
+| Name        | char(35) | NO   |     |         |                |
+| CountryCode | char(3)  | NO   | MUL |         |                |
+| District    | char(20) | NO   |     |         |                |
+| Population  | int(11)  | NO   |     | 0       |                |
++-------------+----------+------+-----+---------+----------------+
+5 rows in set (0.00 sec)
+
+MariaDB [world]> select * from City limit 10;
++----+----------------+-------------+---------------+------------+
+| ID | Name           | CountryCode | District      | Population |
++----+----------------+-------------+---------------+------------+
+|  1 | Kabul          | AFG         | Kabol         |    1780000 |
+|  2 | Qandahar       | AFG         | Qandahar      |     237500 |
+|  3 | Herat          | AFG         | Herat         |     186800 |
+|  4 | Mazar-e-Sharif | AFG         | Balkh         |     127800 |
+|  5 | Amsterdam      | NLD         | Noord-Holland |     731200 |
+|  6 | Rotterdam      | NLD         | Zuid-Holland  |     593321 |
+|  7 | Haag           | NLD         | Zuid-Holland  |     440900 |
+|  8 | Utrecht        | NLD         | Utrecht       |     234323 |
+|  9 | Eindhoven      | NLD         | Noord-Brabant |     201843 |
+| 10 | Tilburg        | NLD         | Noord-Brabant |     193238 |
++----+----------------+-------------+---------------+------------+
+10 rows in set (0.00 sec)
+
+### This is our query -- show me the country codes and average population
+### of the 10 countries with highest average population.
+
+###  Got it wrong the first time, sort is ascending order
+MariaDB [world]> select CountryCode, avg(Population) from City group by CountryCode order by avg(Population) limit 10;
++-------------+-----------------+
+| CountryCode | avg(Population) |
++-------------+-----------------+
+| PCN         |         42.0000 |
+| TKL         |        300.0000 |
+| CCK         |        335.0000 |
+| VAT         |        455.0000 |
+| NIU         |        682.0000 |
+| CXR         |        700.0000 |
+| AIA         |        778.0000 |
+| NFK         |        800.0000 |
+| WLF         |       1137.0000 |
+| SJM         |       1438.0000 |
++-------------+-----------------+
+10 rows in set (0.01 sec)
+
+MariaDB [world]> select CountryCode, avg(Population) from City group by CountryCode order by avg(Population) desc limit 10;
++-------------+-----------------+
+| CountryCode | avg(Population) |
++-------------+-----------------+
+| SGP         |    4017733.0000 |
+| HKG         |    1650316.5000 |
+| URY         |    1236000.0000 |
+| GIN         |    1090610.0000 |
+| UGA         |     890800.0000 |
+| SLE         |     850000.0000 |
+| LBR         |     850000.0000 |
+| MLI         |     809552.0000 |
+| AUS         |     808119.0000 |
+| MNG         |     773700.0000 |
++-------------+-----------------+
+10 rows in set (0.00 sec)
+
+MariaDB [world]> Bye
+
+### Now some basic sqoop commands
+# sqoop list-databases --connect jdbc:mysql://localhost/ --username training --password training
+...
+information_schema
+mysql
+performance_schema
+world
+
+# sqoop list-tables --connect jdbc:mysql://localhost/world --username training --password training
+
+City
+Country
+CountryLanguage
+
+### Now we need to import the table.  I am using a convention /database/<dbname>/<table>
+
+# hdfs dfs -mkdir /database
+# hdfs dfs -mkdir /database/world
+
+### First attempt fails due to the "bindir" problem
+
+# sqoop import --connect jdbc:mysql://localhost/world --username training --password training --table City --target-dir /database/world/city
+   ...
+java.lang.Exception: java.lang.RuntimeException: java.lang.ClassNotFoundException: Class City not found
+   ...
+2023-04-07 18:18:19,414 ERROR tool.ImportTool: Import failed: Import job failed!
+
+### Notice Sqoop put the City.java file there, but Hadoop doesn't know where to
+### look for it.   We will make Sqoop put the file in /tmp, and put /tmp on the Hadoop
+### classpath.  (The classpath part happens as part of the Docker image initialization.)
+
+# sqoop import --connect jdbc:mysql://localhost/world --username training --password training --table City --target-dir /database/world/city --bindir /tmp
+  ...
+2023-04-07 18:21:57,437 INFO mapreduce.ImportJobBase: Transferred 141.0947 KB in 1.8974 seconds (74.363 KB/sec)
+2023-04-07 18:21:57,438 INFO mapreduce.ImportJobBase: Retrieved 4079 records.
+
+### Check that the input looks good
+# hdfs dfs -cat /database/world/city/part* | head
+2023-04-07 18:22:40,751 INFO sasl.SaslDataTransferClient: SASL encryption trust check: localHostTrusted = false, remoteHostTrusted = false
+1,Kabul,AFG,Kabol,1780000
+2,Qandahar,AFG,Qandahar,237500
+3,Herat,AFG,Herat,186800
+4,Mazar-e-Sharif,AFG,Balkh,127800
+5,Amsterdam,NLD,Noord-Holland,731200
+6,Rotterdam,NLD,Zuid-Holland,593321
+7,Haag,NLD,Zuid-Holland,440900
+8,Utrecht,NLD,Utrecht,234323
+9,Eindhoven,NLD,Noord-Brabant,201843
+10,Tilburg,NLD,Noord-Brabant,193238
+
+### Set up for the hadoop streaming.  We discussed the mapper and reducer
+# cd country-avg-pop
+# ls
+mapper	reducer
+
+# cd ..
+
+### To use our run-hadoop-streaming script, the database table files must be
+### in /input-data.  I'll put them in /input-data/city
+
+# hdfs dfs -cp /database/world/city /input-data/city
+  ...
+# hdfs dfs -ls /input-data/city
+Found 2 items
+-rw-r--r--   1 root supergroup          0 2023-04-07 18:30 /input-data/city/_SUCCESS
+-rw-r--r--   1 root supergroup     144481 2023-04-07 18:30 /input-data/city/part-m-00000
+
+### Make sure the output directory /output-data is already there
+# hdfs dfs -mkdir /output-data
+mkdir: `/output-data': File exists
+
+### Run the job!
+root@2d78318c0441:/weekly-code/Week2-HadoopStreamingAndSqoop/Demo# run-hadoop-streaming country-avg-pop city
+   ...
+2023-04-07 18:32:50,252 INFO streaming.StreamJob: Output directory: /output-data/country-avg-pop
+
+### Make sure output data looks OK
+# hdfs dfs -cat /output-data/country-avg-pop/part*
+2023-04-07 18:33:10,662 INFO sasl.SaslDataTransferClient: SASL encryption trust check: localHostTrusted = false, remoteHostTrusted = false
+ABW	29034.000000
+AFG	583025.000000
+AGO	512320.000000
+AIA	778.000000
+ALB	270000.000000
+AND	21189.000000
+ANT	2345.000000
+ARE	345667.200000
+  ...
+
+### Our usual sort and select to get the 10 most
+# hdfs dfs -cat /output-data/country-avg-pop/part* | sort -k 2 -n -r | head -n 10
+
+SGP	4017733.000000
+HKG	1650316.500000
+URY	1236000.000000
+GIN	1090610.000000
+UGA	890800.000000
+SLE	850000.000000
+LBR	850000.000000
+MLI	809552.000000
+AUS	808119.000000
+MNG	773700.000000
+
+### We compared that output to the SQL output and it agreed exactly!

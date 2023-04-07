@@ -1,0 +1,14 @@
+#!/usr/bin/python3
+
+# Input is lines from the City table, which look like this:
+# ID,city name, country code, district, population
+# 10,Tilburg,NLD,Noord-Brabant,193238
+#
+# We want country code and population only
+
+import sys
+import string
+
+for line in sys.stdin:
+    id, name, code, region, pop = line.strip().split(",")
+    print('%s\t%s' % (code, pop))

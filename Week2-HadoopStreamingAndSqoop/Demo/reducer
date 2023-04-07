@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 import sys
 
-# Input like AFG	237500
+# Input is a country code and a population
+# like AFG <tab> 237500
 
 current_country = None
 current_sum = 0
@@ -23,5 +24,5 @@ for line in sys.stdin:
         current_sum = pop
         current_count = 1
 
-if current_country == country:
+if current_count > 0:
     print('%s\t%f' % (current_country, (current_sum * 1.0)/ current_count))

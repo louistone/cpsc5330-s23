@@ -1,0 +1,102 @@
+Agenda for 4/13
+
+From last week:
+  Names of the countries that have highest population per city, in order include country
+  and population
+
+First re-do it in MySQL
+
+show tables;
+describe City;
+select CountryCode, avg(Population) from City group by CountryCode order by avg(Population) desc limit 10;
+
+select Country.Name, avg(City.Population) from City, Country where City.CountryCode = Country.Code group by CountryCode order by avg(City.Population) desc limit 10;
+
+(Note)
+MapReduce implementation
+  * No join on name
+  * Hadoop could do the group by and average, and also select certain columns, 
+       but sorting and limiting we did through the shell
+
+So the goal with Hive is to be able to do the full SQL query w/out shell help.
+
+Hive acts like a DBMS, so we first have to create and populate tables.
+1.  From HDFS
+2.  From Sqoop
+
+Getting City from HDFS
+hdfs dfs -mkdir /database
+hdfs dfs -mkdir /database/world
+
+sqoop import --connect jdbc:mysql://localhost/world \
+ --bindir /tmp \
+ --username training --password training \
+ --table City \
+ --target-dir /database/world/City
+
+create table City (ID INT, Name STRING, CountryCode STRING, District STRING, Population INT);
+ 
+First just create a table, then look at the metastore
+
+ SELECT c.* FROM TBLS t
+ JOIN DBS d
+ ON t.DB_ID = d.DB_ID
+ JOIN SDS s
+ ON t.SD_ID = s.SD_ID
+ JOIN COLUMNS_V2 c
+ ON s.CD_ID = c.CD_ID
+ WHERE TBL_NAME = 'City'
+ AND d.NAME='default'
+
+Then associate the data stream with it.
+ load data inpath "/database/world/City" into table City;
+
+But do a select * from city and see that it didn't get the field delimiter.
+
+    drop table City
+
+    create table City (ID INT, Name STRING, CountryCode STRING, District STRING, Population INT) row format delimited fields terminated by ',';
+    load data inpath "/database/world/City" into table city;
+   After that completes, note that the data is here:  /user/hive/warehouse/city
+
+6.  Now try to get Country into Hive using sqoop
+
+     sqoop import --bindir /tmp \
+       --connect jdbc:mysql://localhost/world \
+       --username training \
+       --password training \
+       --fields-terminated-by ','\
+       --table Country \
+       --hive-import
+
+   Remember Country needs to be deleted in HDFS ahead of time.
+   Verify the table and its schema.
+
+7.  Now the join
+ Introduce hive scripts and look in join-and-group-query.hive
+
+Next, methods of exporting.
+  1.  Store as Hive Table
+  2.  Export to HDFS
+  3.  Export to local file system
+  
+There are 3 Hive scripts in the repo.
+
+Summary:
+Using Hadoop / HDFS look like an RDBMS
+1.  Load relational data into HDFS using Sqoop
+2.  Creating tables in Hive
+3.  Associating a table with data in HDFS
+4.  Hive queries
+5.  Exporting
+
+A big deal right now is schema information.  
+Here we have the schema information associated with the Hive Metastore (only) but when we export out 
+to the next app or the next phase, that information is lost.  The next step will be to see how we can associate
+schema information with the data itself.
+
+
+
+
+
+

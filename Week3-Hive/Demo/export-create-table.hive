@@ -1,6 +1,6 @@
-CREATE TABLE CountriesWithMostPop AS
-SELECT Country.Name, avg(City.Population) FROM City, Country
-  WHERE City.CountryCode = Country.Code
-  GROUP BY Country.Name
-  ORDER BY avg(City.Population) DESC
-  LIMIT 10;
+create table countrieswithmostpop as
+select country.name, avg(city.population) from city, country
+  where city.countrycode = country.code
+  group by country.name
+  order by avg(city.population) desc
+  limit 10;

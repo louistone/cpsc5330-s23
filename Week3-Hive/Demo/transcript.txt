@@ -1,0 +1,422 @@
+###  We are going to work on the "countries with average population scenario
+###  from last week, except we will add a join to get the country name,
+###  and we will use Hive to get us the ability to do the sort and the limit to
+###  highest 10.   Remember last week we used Hadoop Streaming, which did the
+###  group_by for us and computed the average population
+
+###  Review the data in MySQL, and also do the query including join, sort and limit
+# mysql -u training -p world
+MariaDB [world]> describe City;
++-------------+----------+------+-----+---------+----------------+
+| Field       | Type     | Null | Key | Default | Extra          |
++-------------+----------+------+-----+---------+----------------+
+| ID          | int(11)  | NO   | PRI | NULL    | auto_increment |
+| Name        | char(35) | NO   |     |         |                |
+| CountryCode | char(3)  | NO   | MUL |         |                |
+| District    | char(20) | NO   |     |         |                |
+| Population  | int(11)  | NO   |     | 0       |                |
++-------------+----------+------+-----+---------+----------------+
+5 rows in set (0.02 sec)
+
+### This is how far we got last week
+MariaDB [world]> select CountryCode, avg(Population) from City group by CountryCode order by avg(Population) desc limit 10;
++-------------+-----------------+
+| CountryCode | avg(Population) |
++-------------+-----------------+
+| SGP         |    4017733.0000 |
+| HKG         |    1650316.5000 |
+| URY         |    1236000.0000 |
+| GIN         |    1090610.0000 |
+| UGA         |     890800.0000 |
+| SLE         |     850000.0000 |
+| LBR         |     850000.0000 |
+| MLI         |     809552.0000 |
+| AUS         |     808119.0000 |
+| MNG         |     773700.0000 |
++-------------+-----------------+
+10 rows in set (0.03 sec)
+
+### Add the join to get country name
+MariaDB [world]> select Country.Name, avg(City.Population) from City, Country where City.CountryCode = Country.Code group by CountryCode order by avg(City.Population) desc limit 10;
++--------------+----------------------+
+| Name         | avg(City.Population) |
++--------------+----------------------+
+| Singapore    |         4017733.0000 |
+| Hong Kong    |         1650316.5000 |
+| Uruguay      |         1236000.0000 |
+| Guinea       |         1090610.0000 |
+| Uganda       |          890800.0000 |
+| Liberia      |          850000.0000 |
+| Sierra Leone |          850000.0000 |
+| Mali         |          809552.0000 |
+| Australia    |          808119.0000 |
+| Mongolia     |          773700.0000 |
++--------------+----------------------+
+10 rows in set (0.00 sec)
+
+### First we are going to create the Hive city table schema (no data yet)
+
+# hive -e 'create table City (ID INT, Name STRING, CountryCode STRING, District STRING, Population INT);'
+OK
+
+### Run Hive interactively to see if the table is there
+# hive
+hive> show tables;
+city
+
+hive> describe city;
+
+id                  	int                 	                    
+name                	string              	                    
+countrycode         	string              	                    
+district            	string              	                    
+population          	int                 	                    
+
+### Go back to MySQL to look at the Hive metastore
+
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo# mysql -u training -p 
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| hive               |
+| information_schema |
+| mysql              |
+| performance_schema |
+| world              |
++--------------------+
+5 rows in set (0.00 sec)
+
+MariaDB [(none)]> use hive;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MariaDB [hive]> show tables;
++-------------------------------+
+| Tables_in_hive                |
++-------------------------------+
+| AUX_TABLE                     |
+| BUCKETING_COLS                |
+| CDS                           |
+| COLUMNS_V2                    |
+| COMPACTION_QUEUE              |
+| COMPLETED_COMPACTIONS         |
+| COMPLETED_TXN_COMPONENTS      |
+| CTLGS                         |
+| DATABASE_PARAMS               |
+| DBS                           |
+| DB_PRIVS                      |
+| DELEGATION_TOKENS             |
+| FUNCS                         |
+| FUNC_RU                       |
+| GLOBAL_PRIVS                  |
+| HIVE_LOCKS                    |
+| IDXS                          |
+| INDEX_PARAMS                  |
+| I_SCHEMA                      |
+| KEY_CONSTRAINTS               |
+| MASTER_KEYS                   |
+| MATERIALIZATION_REBUILD_LOCKS |
+| METASTORE_DB_PROPERTIES       |
+| MIN_HISTORY_LEVEL             |
+| MV_CREATION_METADATA          |
+| MV_TABLES_USED                |
+| NEXT_COMPACTION_QUEUE_ID      |
+| NEXT_LOCK_ID                  |
+| NEXT_TXN_ID                   |
+| NEXT_WRITE_ID                 |
+| NOTIFICATION_LOG              |
+| NOTIFICATION_SEQUENCE         |
+| NUCLEUS_TABLES                |
+| PARTITIONS                    |
+| PARTITION_EVENTS              |
+| PARTITION_KEYS                |
+| PARTITION_KEY_VALS            |
+| PARTITION_PARAMS              |
+| PART_COL_PRIVS                |
+| PART_COL_STATS                |
+| PART_PRIVS                    |
+| REPL_TXN_MAP                  |
+| ROLES                         |
+| ROLE_MAP                      |
+| RUNTIME_STATS                 |
+| SCHEMA_VERSION                |
+| SDS                           |
+| SD_PARAMS                     |
+| SEQUENCE_TABLE                |
+| SERDES                        |
+| SERDE_PARAMS                  |
+| SKEWED_COL_NAMES              |
+| SKEWED_COL_VALUE_LOC_MAP      |
+| SKEWED_STRING_LIST            |
+| SKEWED_STRING_LIST_VALUES     |
+| SKEWED_VALUES                 |
+| SORT_COLS                     |
+| TABLE_PARAMS                  |
+| TAB_COL_STATS                 |
+| TBLS                          |
+| TBL_COL_PRIVS                 |
+| TBL_PRIVS                     |
+| TXNS                          |
+| TXN_COMPONENTS                |
+| TXN_TO_WRITE_ID               |
+| TYPES                         |
+| TYPE_FIELDS                   |
+| VERSION                       |
+| WM_MAPPING                    |
+| WM_POOL                       |
+| WM_POOL_TO_TRIGGER            |
+| WM_RESOURCEPLAN               |
+| WM_TRIGGER                    |
+| WRITE_SET                     |
++-------------------------------+
+74 rows in set (0.00 sec)
+
+MariaDB [hive]> select * from TBLS;
++--------+-------------+-------+------------------+-------+------------+-----------+-------+----------+---------------+--------------------+--------------------+--------------------+
+| TBL_ID | CREATE_TIME | DB_ID | LAST_ACCESS_TIME | OWNER | OWNER_TYPE | RETENTION | SD_ID | TBL_NAME | TBL_TYPE      | VIEW_EXPANDED_TEXT | VIEW_ORIGINAL_TEXT | IS_REWRITE_ENABLED |
++--------+-------------+-------+------------------+-------+------------+-----------+-------+----------+---------------+--------------------+--------------------+--------------------+
+|      1 |  1681439004 |     1 |                0 | root  | USER       |         0 |     1 | city     | MANAGED_TABLE | NULL               | NULL               |                    |
++--------+-------------+-------+------------------+-------+------------+-----------+-------+----------+---------------+--------------------+--------------------+--------------------+
+1 row in set (0.00 sec)
+
+### This is a big join (I copied from somewhere) to get information about the columns
+### You won't use this, we're just verifying that the schema is the same as we got from Hive
+
+MariaDB [hive]> SELECT c.* FROM TBLS t
+ JOIN DBS d
+ ON t.DB_ID = d.DB_ID
+ JOIN SDS s
+ ON t.SD_ID = s.SD_ID
+ JOIN COLUMNS_V2 c
+ ON s.CD_ID = c.CD_ID
+ WHERE TBL_NAME = 'city'
+ AND d.NAME='default';
+
++-------+---------+-------------+-----------+-------------+
+| CD_ID | COMMENT | COLUMN_NAME | TYPE_NAME | INTEGER_IDX |
++-------+---------+-------------+-----------+-------------+
+|     1 | NULL    | countrycode | string    |           2 |
+|     1 | NULL    | district    | string    |           3 |
+|     1 | NULL    | id          | int       |           0 |
+|     1 | NULL    | name        | string    |           1 |
+|     1 | NULL    | population  | int       |           4 |
++-------+---------+-------------+-----------+-------------+
+5 rows in set (0.00 sec)
+
+MariaDB [hive]> Bye
+
+### Next we get the table data from the RDB, put it in HDFS, the import
+### it into Hive
+
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo# hdfs dfs -mkdir /database/world
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo# hdfs dfs -mkdir /database/world
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo#
+sqoop import --connect jdbc:mysql://localhost/world \
+ --bindir /tmp \
+ --username training --password training \
+ --table City \
+ --target-dir /database/world/city
+
+### Check if it's there
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo# hdfs dfs -cat /database/world/city/part* | head
+
+1,Kabul,AFG,Kabol,1780000
+2,Qandahar,AFG,Qandahar,237500
+3,Herat,AFG,Herat,186800
+4,Mazar-e-Sharif,AFG,Balkh,127800
+5,Amsterdam,NLD,Noord-Holland,731200
+6,Rotterdam,NLD,Zuid-Holland,593321
+7,Haag,NLD,Zuid-Holland,440900
+8,Utrecht,NLD,Utrecht,234323
+9,Eindhoven,NLD,Noord-Brabant,201843
+10,Tilburg,NLD,Noord-Brabant,193238
+
+### Now we will import it into Hive 
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo# hive
+hive> load data inpath "/database/world/city" into table city;
+
+### Notice that the data is no longer where we put it in HDFS
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo# hdfs dfs -cat /database/world/city/part* | head
+cat: `/database/world/city/part*': No such file or directory
+
+### And here's where it is
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo# hdfs dfs -ls /user/hive/warehouse/city
+Found 1 items
+-rw-r--r--   1 root supergroup     144481 2023-04-14 02:28 /user/hive/warehouse/city/part-m-00000
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo# hdfs dfs -cat /user/hive/warehouse/city/part-m-00000 | head
+
+1,Kabul,AFG,Kabol,1780000
+2,Qandahar,AFG,Qandahar,237500
+3,Herat,AFG,Herat,186800
+4,Mazar-e-Sharif,AFG,Balkh,127800
+5,Amsterdam,NLD,Noord-Holland,731200
+6,Rotterdam,NLD,Zuid-Holland,593321
+7,Haag,NLD,Zuid-Holland,440900
+8,Utrecht,NLD,Utrecht,234323
+9,Eindhoven,NLD,Noord-Brabant,201843
+10,Tilburg,NLD,Noord-Brabant,193238
+
+### Now see if we can access the data via a SELECT
+root@ebb1e3ca177e:/weekly-code/Week3-Hive/Demo# hive
+hive> select * from city limit 10;
+
+2023-04-14 02:33:07,153 INFO  [148812a8-9a06-40b0-8e53-1de2636cdfd7 main] lazy.LazyStruct (LazyStruct.java:parse(158)) - Missing fields! Expected 5 fields but only got 1! Ignoring similar problems.
+NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL
+
+#### Bad news!  It means there was a validation error
+#### on every record. The problem is we did not tell Hive that the
+#### data was comma separated.  The default field separator in Hive is ^A
+
+### Start over and fix the schema
+hive> drop table city;
+hive> create table city (ID INT, Name STRING, CountryCode STRING, District STRING, Population INT) row format delimited fields terminated by ',';
+hive> show tables;
+city
+hive> quit
+
+### Now we have to go back and re-import the data -- remember,
+### Hive by default deletes the data when you drop the table!
+
+# hdfs dfs -rm -r /database/world/city
+Deleted /database/world/city
+# sqoop import --connect jdbc:mysql://localhost/world \
+ --bindir /tmp \
+ --username training --password training \
+ --table City \
+ --target-dir /database/world/city
+
+### And try again to load the data, now that the schema recognizes comma separate fields
+# hive -e 'load data inpath "/database/world/city" into table city;'
+
+# hive -e 'select * from city limit 10'
+
+1	Kabul	AFG	Kabol	1780000
+2	Qandahar	AFG	Qandahar	237500
+3	Herat	AFG	Herat	186800
+4	Mazar-e-Sharif	AFG	Balkh	127800
+5	Amsterdam	NLD	Noord-Holland	731200
+6	Rotterdam	NLD	Zuid-Holland	593321
+7	Haag	NLD	Zuid-Holland	440900
+8	Utrecht	NLD	Utrecht	234323
+9	Eindhoven	NLD	Noord-Brabant	201843
+10	Tilburg	NLD	Noord-Brabant	193238
+
+### To get the country table we'll use Sqoop, and that
+### gets us both the schema and the data
+
+#      sqoop import --bindir /tmp \
+       --connect jdbc:mysql://localhost/world \
+       --username training \
+       --password training \
+       --fields-terminated-by ','\
+       --table Country \
+       --hive-import
+
+OK
+LOAD DATA INPATH 'hdfs://localhost:9000/user/root/Country' INTO TABLE `Country`
+
+### Check to see if the new table is there
+# hive
+hive> show tables;
+city
+country
+
+hive> select * from country limit 10;
+
+ABW	Aruba	North America	Caribbean	193.0	NULL	103000	78.4	828.0	793.0	Aruba	Nonmetropolitan Territory of The Netherlands	Beatrix	129	AW
+AFG	Afghanistan	Asia	Southern and Central Asia	652090.0	1919	22720000	45.9	5976.0	NULL	Afganistan/Afqanestan	Islamic Emirate	Mohammad Omar	1	AF
+AGO	Angola	Africa	Central Africa	1246700.0	1975	12878000	38.3	6648.0	7984.0	Angola	Republic	José Eduardo dos Santos	56	AO
+AIA	Anguilla	North America	Caribbean	96.0	NULL	8000	76.1	63.2	NULL	Anguilla	Dependent Territory of the UK	Elisabeth II	62	AI
+ALB	Albania	Europe	Southern Europe	28748.0	1912	3401200	71.6	3205.0	2500.0	Shqipëria	Republic	Rexhep Mejdani	34	AL
+AND	Andorra	Europe	Southern Europe	468.0	1278	78000	83.5	1630.0	NULL	Andorra	Parliamentary Coprincipality		55	AD
+ANT	Netherlands Antilles	North America	Caribbean	800.0	NULL	217000	74.7	1941.0	NULL	Nederlandse Antillen	Nonmetropolitan Territory of The Netherlands	Beatrix	33	AN
+ARE	United Arab Emirates	Asia	Middle East	83600.0	1971	2441000	74.1	37966.0	36846.0	Al-Imarat al-´Arabiya al-Muttahida	Emirate Federation	Zayid bin Sultan al-Nahayan	65	AE
+ARG	Argentina	South America	South America	2780400.0	1816	37032000	75.1	340238.0	323310.0	Argentina	Federal Republic	Fernando de la Rúa	69	AR
+ARM	Armenia	Asia	Middle East	29800.0	1991	3520000	66.4	1813.0	1627.0	Hajastan	Republic2023-04
+
+hive> describe city;
+id                  	int                 	                    
+name                	string              	                    
+countrycode         	string              	                    
+district            	string              	                    
+population          	int                 	                    
+
+### Now we will do the join, group, sort, and limit query, taking input from an external Hive script file
+# hive < join-and-group-query.hive 
+
+Singapore	4017733.0
+Hong Kong	1650316.5
+Uruguay	1236000.0
+Guinea	1090610.0
+Uganda	890800.0
+Sierra Leone	850000.0
+Liberia	850000.0
+Mali	809552.0
+Australia	808119.0
+Mongolia	773700.0
+Time taken: 32.225 seconds, Fetched: 10 row(s)
+
+#####
+#####
+##### Output deleted -- next thing we did was "exporting" the query results
+#####   by creating a new table, using the command
+#####   hive < export-create-table.hive
+##### We then went back to the Hive shell and verified that
+####     select * from countrieswithmostpop
+####  Gave us the same output.  And much faster!
+
+#### Next is exporting to HDFS using the script export-hdfs.hive
+###  It specifies /database/country-average-population as its output directory
+
+# hdfs dfs -ls /database/country-average-population
+Found 1 items
+-rw-r--r--   1 root supergroup        181 2023-04-14 02:52 /database/country-average-population/000000_0
+# hdfs dfs -cat /database/country-average-population/000000_0
+
+Singapore,4017733.0
+Hong Kong,1650316.5
+Uruguay,1236000.0
+Guinea,1090610.0
+Uganda,890800.0
+Sierra Leone,850000.0
+Liberia,850000.0
+Mali,809552.0
+Australia,808119.0
+Mongolia,773700.0
+
+########################################
+### Finally, export to the local filesystem
+
+# hive < export-local.hive 
+
+### Is it on the local filesystem?  We specified country-average-population as a destination
+
+# ls
+City.java     Script.txt		  export-create-table.hive  export-local.hive
+Country.java  country-average-population  export-hdfs.hive	    join-and-group-query.hive
+
+# ls country-average-population/
+000000_0
+
+# cat country-average-population/000000_0 
+Singapore,4017733.0
+Hong Kong,1650316.5
+Uruguay,1236000.0
+Guinea,1090610.0
+Uganda,890800.0
+Sierra Leone,850000.0
+Liberia,850000.0
+Mali,809552.0
+Australia,808119.0
+Mongolia,773700.0

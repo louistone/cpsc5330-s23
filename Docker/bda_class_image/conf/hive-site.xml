@@ -6922,4 +6922,8 @@
       See HIVE-15121 for details.
     </description>
   </property>
+  <property>
+	  <name>hive.root.logger</name>
+	  <value>OFF</value>
+  </property>
 </configuration>

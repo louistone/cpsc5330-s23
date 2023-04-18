@@ -1,4 +1,4 @@
-LAPTOP_ROOT=/Users/toxuxu/workspace/su/cpsc5330-s23
+LAPTOP_ROOT=/Users/tongxu/workspace/cpsc5330-s23
 DOCKER_DIRECTORY=/weekly-code
 IMAGE=hanksseattleu/bda_class_image:latest
 DOCKER_SHELL=bash

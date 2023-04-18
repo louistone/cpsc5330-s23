@@ -18,8 +18,8 @@ RUN rm -rf /var/lib/apt/lists/*
 
 COPY conf/.emacs /.emacs
 
-COPY databases/world.sql /tmp/world.sql
-COPY databases/airline.sql /tmp/airline.sql
+#COPY databases/world.sql /tmp/world.sql
+#COPY databases/airline.sql /tmp/airline.sql
 COPY textcorpora /data/textcorpora
 
 
@@ -63,8 +63,8 @@ ENV ZOOKEEPER_HOME='.'
 COPY mysql-connector-java-8.0.23.jar opt/sqoop/lib/mysql-connector-java-8.0.23.jar
 
 # Sample database
-COPY world.sql /tmp/world.sql
-COPY airline.sql /tmp/airline.sql
+#COPY world.sql /tmp/world.sql
+#COPY airline.sql /tmp/airline.sql
 
 
 #######################

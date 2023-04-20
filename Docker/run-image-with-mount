@@ -1,6 +1,8 @@
+
 LAPTOP_ROOT=/mnt/c/Users/hanks/Documents/GitHub/cpsc5330-s23
 DOCKER_DIRECTORY=/weekly-code
-IMAGE=hanksseattleu/bda_class_image:latest
+# IMAGE=hanksseattleu/bda_class_image:latest
+IMAGE=zhuskkql/bds_hive:1.2
 DOCKER_SHELL=bash
 
 docker run -it --platform linux/arm64 -v $LAPTOP_ROOT/$1:$DOCKER_DIRECTORY $IMAGE $DOCKER_SHELL

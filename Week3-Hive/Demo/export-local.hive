@@ -1,4 +1,4 @@
 INSERT OVERWRITE LOCAL DIRECTORY 'country-average-population'
  ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
  STORED AS TEXTFILE
- SELECT * FROM countrieswithmostpop;
+ex

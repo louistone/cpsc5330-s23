@@ -1,0 +1,14 @@
+aws dynamodb list-tables
+aws dynamodb describe-table --table-name college
+
+aws dynamodb query \
+    --table-name college \
+    --key-condition-expression "statecode = :state" \
+    --expression-attribute-values '{":state": {"S": "WA"}}' \
+    --projection-expression "statecode, city, instname, cost"
+
+aws dynamodb query \
+    --table-name college \
+    --key-condition-expression "statecode = :state and cost between :minCost and :maxCost" \
+    --expression-attribute-values '{":state": {"S": "WA"}, ":minCost": {"N": "10000"}, ":maxCost": {"N": "20000"}}' \
+    --projection-expression "statecode, city, instname, cost"

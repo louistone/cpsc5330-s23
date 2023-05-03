@@ -1,0 +1,23 @@
+0 -- UNITID -- Unique ID
+1 -- INSTNM -- Institution name
+2 -- CITY
+3 -- STABBR -- State abbreviation
+4 -- NPT4_PUB  -- Ignore
+5 -- NPT4_PRIV  -- Ignore
+6 -- COST -- Cost in $
+7 -- ADM_RATE -- Admission rate
+8 -- SAT_AVG -- Average SAT score
+9 -- DISTANCEONLY -- Distance only (0/1)
+10,11,12 -- CIPTITLE1,2,3 -- Names of primary programs
+
+=======================
+Notes for the demo/lab
+
+We want only fields
+1 => name
+2 => city
+3 => state
+6 => cost
+
+id,instname,city,statecode,ignore1,ignore2,cost,rate,sat,dist,t1,t2,t3
+  * Note, "state" and "name" are reserved words in AWS CLI so best avoid them

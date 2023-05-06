@@ -2,7 +2,6 @@
 
 import sys
 
-
 stopwords = set(["a", "as", "able", "about", "above", "according", "accordingly",
              "across", "actually", "after", "afterwards", "again", "against", "aint", "all", "allow",
              "allows", "almost", "alone", "along", "already", "also", "although", "always", "am", "among",
@@ -66,6 +65,7 @@ stopwords = set(["a", "as", "able", "about", "above", "according", "accordingly"
              "yet", "you", "youd", "youll", "youre", "youve", "your", "yours", "yourself",
              "yourselves", "zero"])
 
+# check whether a term is a token
 def is_valid_token(term):
     return len(term) > 1 and any(c.isalpha() for c in term) and term not in stopwords
 
@@ -108,3 +108,9 @@ for line in sys.stdin:
             num_of_tokens = 1
             token_set.add(term)
 
+# print stats for last docid
+print('%s\t%s\t%s\t%s\t%s' % (docid,
+                            num_of_words,
+                            num_of_stopword,
+                            num_of_tokens,
+                            len(token_set)))

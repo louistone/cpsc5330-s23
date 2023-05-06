@@ -75,7 +75,7 @@ num_of_words = 0
 num_of_stopword = 0
 num_of_tokens = 0
 num_of_unique_tokens = 0
-token_set = {}
+token_set = {"dummy"}
 
 for line in sys.stdin:
     docid, term = line.strip('\n').split('\t')
@@ -95,12 +95,12 @@ for line in sys.stdin:
                                       num_of_words,
                                       num_of_stopword,
                                       num_of_tokens,
-                                      len(token_set)))
+                                      len(token_set)-1))
         current_docid = docid
         num_of_words = 1
         num_of_stopword = 0
         num_of_tokens = 0
-        token_set = ()
+        token_set = {"dummy"}
 
         if term in stopwords:
             num_of_stopword = 1
@@ -113,4 +113,4 @@ print('%s\t%s\t%s\t%s\t%s' % (docid,
                             num_of_words,
                             num_of_stopword,
                             num_of_tokens,
-                            len(token_set)))
+                            len(token_set)-1))

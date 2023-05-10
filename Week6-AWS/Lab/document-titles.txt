@@ -16,4 +16,3 @@ shakespeare-caesar	The Tragedie of Julius Caesar by William Shakespeare
 shakespeare-hamlet	The Tragedie of Hamlet by William Shakespeare
 shakespeare-macbeth	The Tragedie of Macbeth by William Shakespeare
 whitman-leaves	Leaves of Grass by Walt Whitman
-

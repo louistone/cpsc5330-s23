@@ -1,0 +1,26 @@
+How to upload and run a notebook on Spark/EMR
+
+1. Create a cluster
+    * Custom configuration
+    * Include Hadoop, Jupyter, Spark.  
+	* Use m4large instances -- 1 task node will be fine
+	* Supply the usual default service roles and instance profile
+2. Wait for the cluster to become fully ready -- Waiting! Not just Starting!  (Seriously, bad things happen if you don't.)
+3. Go to Notebooks, then to "Use EMR Notebooks" (at top)
+4. Create a notebook and specify some s3 location.  Choose your running cluster
+5.  Wait for the notebook to start.  Ready!!  Not Pending!  Wait!!
+6. Once notebook starts, open in Jupyter (not Jupyter Labs) and verify it's there.
+7.  Open the notebook and see if the kernel is PySpark.  It probably won't be.  If not, go to Kernel and select PySpark
+8.  Verify the Spark Context is there and operational (just put sc in a code cell and execute it)
+
+Now you can upload an existing notebook
+1.  Back on the Jupyter dashboard, hit the Upload button, choose the notebook file, then you have to push (a different) Upload again
+2.  Do the kernel check again, and select PySpark if you need to
+3.  Verify the Spark Context, as above
+
+From now on, when you go back to the EMR Notebooks dashboard, you may not see your uploaded notebook!
+But if you take an existing notebook (like your first you created from scratch above) and you "Open in Jupyter", you will
+see your uploaded notebook.  Why?  No idea!
+
+
+

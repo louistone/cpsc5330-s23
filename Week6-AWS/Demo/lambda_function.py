@@ -2,13 +2,13 @@ import boto3
 
 # Copied from console version
 
-def create_table(table_name="college"):
+def create_table(table_name="college2"):
     return boto3.resource('dynamodb').Table(table_name)
 
 def state_and_cost_range_query(table, state, low_cost, high_cost):
     query_params = {
-        'KeyConditionExpression': 'statecode = :sc and cost between :minc and :maxc',
-        'ProjectionExpression': "statecode, city, instname, cost",
+        'KeyConditionExpression': 'state_code = :sc and out_of_state_total between :minc and :maxc',
+        'ProjectionExpression': "state_code, out_of_state_total",
         'ExpressionAttributeValues': {':sc': state, ':minc': low_cost, ':maxc': high_cost } }
     response = table.query(**query_params)
     return response['Items']
@@ -29,7 +29,7 @@ def format_html_query_results(statecode, lowcost, highcost, items):
     banner_html = f"<h3>Search results for state {statecode}<br/>Low cost is {lowcost}<br/>High cost is {highcost}</h3><p/>"
     item_html = '<ol>'
     for item in items:
-        item_html += f"<li>{item['city']}, {item['instname']}, {item['cost']}</li>"
+        item_html += f"<li>{item['state_code']}, {item['out_of_state_total']}</li>"
     item_html += '</ol>'
     html = f"<html><body>{banner_html} {item_html}</body></html>"    
     return {'statusCode': 200, 'headers': {'Content-Type': 'text/html'},'body': html}

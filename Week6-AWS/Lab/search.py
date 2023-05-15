@@ -17,39 +17,26 @@ docid_table = create_docid_table();
 tfidf_table = create_tfidf_table();
 
 ###################################################
-#  These three functions do the dynamodb lookups.  
-#  There is code missing for all three.
-
 # get_docids_for_terms
 # Input is a sequence of terms.  Output is a set of docids -- the set of 
 #  all docids that contain one or more of the terms
-
 def get_docids_for_terms(terms):
     docids = set()
     for term in terms:
         #  Make dynamodb call to get all docids for that term, and add them to the set
+        query_params = {
+            'KeyConditionExpression': 'term = :term',
+            'ProjectionExpression': "term,id",
+            'ExpressionAttributeValues': {':term': term} }
+        response = tfidf_table.query(**query_params)
+        items = response['Items']
+        for item in items:
+            docids.add(item['id'])
     return docids
- 
+
 # get_tfidf
 #  Input is a term and docid, output is the stored TF-IDF value for
 #  that pair, or 0.0 if there is no stored value
-def state_and_cost_range_query(table, term):
-    query_params = {
-        'KeyConditionExpression': 'term = :term',
-        'ProjectionExpression': "term, fre, id",
-        'ExpressionAttributeValues': {':term': term} }
-    response = table.query(**query_params)
-    return response['Items']
-
-def state_and_cost_range_query(table, state, low_cost, high_cost):
-    query_params = {
-        'KeyConditionExpression': 'state_code = :sc and out_of_state_total between :minc and :maxc',
-        'ProjectionExpression': "state_code, out_of_state_total",
-        'ExpressionAttributeValues': {':sc': state, ':minc': low_cost, ':maxc': high_cost } }
-    response = table.query(**query_params)
-    return response['Items']
-    
-     
 def get_tfidf(term, docid):
     query_params = {
         'KeyConditionExpression': 'term = :term and id = :docid',

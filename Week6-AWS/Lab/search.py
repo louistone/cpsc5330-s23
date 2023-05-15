@@ -69,7 +69,7 @@ def termify(line):
     words = re.findall(r'[^\W_]+', line)
     for word in words:
         lowered = word.lower()
-        if (len(lowered) > 1) and (lowered not in stopwords.stopwords) and (not re.search(r'^\d*$', lowered)):
+        if (len(lowered) > 1) and (lowered not in stopwords) and (not re.search(r'^\d*$', lowered)):
             terms.append(lowered)
     return terms
 
@@ -82,7 +82,7 @@ def termify(line):
 def create_docid_table(table_name="doctitles"):
     return boto3.resource('dynamodb').Table(table_name)
 
-def create_tfidf_table(table_name="tfidf"):
+def create_tfidf_table(table_name="tfidf3"):
     return boto3.resource('dynamodb').Table(table_name)
 
 docid_table = create_docid_table();
@@ -117,7 +117,7 @@ def get_tfidf(term, docid):
     response = tfidf_table.query(**query_params)
     items = response['Items']
     if items:
-        return items[0]['fre']
+        return float(items[0]['fre'])
     else:
         return 0.0
   
@@ -132,13 +132,13 @@ def get_doc_title(docid):
     response = docid_table.query(**query_params)
     items = response['Items']
     if items:
-        return float(items[0]['title'])
+        return items[0]['title']
     else:
         return None
 ##########################################################
 
 def search(line):
-    terms = termify.termify(line)
+    terms = termify(line)
     docids = get_docids_for_terms(terms)
     return sort_and_limit([(docid, compute_doc_relevance(docid, terms)) for docid in docids])
 
@@ -147,13 +147,13 @@ def search(line):
 def compute_doc_relevance(docid, terms):
     total = 0.0
     for term in terms:
-        total += get_tfidf(term,docid)
+        total = total + get_tfidf(term, docid)
     return total/(len(terms)*1.0)
 ## Input pairs are (docid, tfidf)
 ##    Sort in descending order of tfidf, choose the top five, 
 ##    retrieve the doc title, and truncate tfidf to an integer
 ##    Output is a list of at most 5 pairs of the form (docname, int-tfidf)
-   
+
 def sort_and_limit(pairs):
     sorted_pairs = sorted(pairs, key=lambda x: x[1], reverse=True)
     top_5_pairs = sorted_pairs[:5]
@@ -174,7 +174,7 @@ def lambda_handler(event, context):
 
 # Generate a full HTML page from a list of items returned by the search
 def format_html_query_results(line,results):
-    banner_html = f"<h3>Search results for line {line}</h3><p/>"
+    banner_html = f"<h3>Search results for:{line}</h3><p/>"
     item_html = '<ol>'
     for result in results:
         item_html += f"<li>{result[0]} -- {result[1]}</li>"

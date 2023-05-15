@@ -6,10 +6,15 @@ import termify
 #    input query.  Output is a sequence of the form (docname, relevance) of 
 #    length at most 5, and sorted in descending order of relevance
 
-
 #  Step 1 -- Make connections to the two dynamodb tables
-# tfidf_table = ...
-# docid_table = ...
+def create_docid_table(table_name="doctitles"):
+    return boto3.resource('dynamodb').Table(table_name)
+
+def create_tfidf_table(table_name="tfidf"):
+    return boto3.resource('dynamodb').Table(table_name)
+
+docid_table = create_docid_table();
+tfidf_table = create_tfidf_table();
 
 ###################################################
 #  These three functions do the dynamodb lookups.  
@@ -28,17 +33,49 @@ def get_docids_for_terms(terms):
 # get_tfidf
 #  Input is a term and docid, output is the stored TF-IDF value for
 #  that pair, or 0.0 if there is no stored value
- 
+def state_and_cost_range_query(table, term):
+    query_params = {
+        'KeyConditionExpression': 'term = :term',
+        'ProjectionExpression': "term, fre, id",
+        'ExpressionAttributeValues': {':term': term} }
+    response = table.query(**query_params)
+    return response['Items']
+
+def state_and_cost_range_query(table, state, low_cost, high_cost):
+    query_params = {
+        'KeyConditionExpression': 'state_code = :sc and out_of_state_total between :minc and :maxc',
+        'ProjectionExpression': "state_code, out_of_state_total",
+        'ExpressionAttributeValues': {':sc': state, ':minc': low_cost, ':maxc': high_cost } }
+    response = table.query(**query_params)
+    return response['Items']
+    
+     
 def get_tfidf(term, docid):
-    pass
+    query_params = {
+        'KeyConditionExpression': 'term = :term and id = :docid',
+        'ProjectionExpression': "term, id, fre",
+        'ExpressionAttributeValues': {':term': term,':id': docid} }
+    response = tfidf_table.query(**query_params)
+    items = response['Items']
+    if items:
+        return items[0]['fre']
+    else:
+        return 0.0
   
 # get_doc_title
 #   Input is a docid, output is the stored name (title) for the document as stored in Dynamodb, or None if 
 #     there is no such entry
-
 def get_doc_title(docid):
-  pass
-
+    query_params = {
+        'KeyConditionExpression': 'id = :id',
+        'ProjectionExpression': "id, title",
+        'ExpressionAttributeValues': {':id': docid}}
+    response = docid_table.query(**query_params)
+    items = response['Items']
+    if items:
+        return items[0]['title']
+    else:
+        return None
 ##########################################################
 
 def search(line):

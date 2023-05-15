@@ -54,7 +54,7 @@ def get_tfidf(term, docid):
     query_params = {
         'KeyConditionExpression': 'term = :term and id = :docid',
         'ProjectionExpression': "term, id, fre",
-        'ExpressionAttributeValues': {':term': term,':id': docid} }
+        'ExpressionAttributeValues': {':term': term,':docid': docid} }
     response = tfidf_table.query(**query_params)
     items = response['Items']
     if items:

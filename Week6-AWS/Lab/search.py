@@ -168,7 +168,7 @@ def sort_and_limit(pairs):
     return processed_pairs
 
 def lambda_handler(event, context):
-    line = event['queryStringParameters']['line']
+    line = event['queryStringParameters']['query']
     results = search(line)
     return format_html_query_results(line,results)
 

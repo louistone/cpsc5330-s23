@@ -94,3 +94,18 @@ def sort_and_limit(pairs):
         processed_pairs.append((title, relevance))
     
     return processed_pairs
+
+def lambda_handler(event, context):
+    line = event['queryStringParameters']['line']
+    results = search(line)
+    return format_html_query_results(results)
+
+# Generate a full HTML page from a list of items returned by the search
+def format_html_query_results(line,results):
+    banner_html = f"<h3>Search results for line {line}</h3><p/>"
+    item_html = '<ol>'
+    for result in results:
+        item_html += f"<li>{result[0] -- result[1]}</li>"
+    item_html += '</ol>'
+    html = f"<html><body>{banner_html}{item_html}</body></html>"   
+    return {'statusCode': 200, 'headers': {'Content-Type': 'text/html'},'body': html}

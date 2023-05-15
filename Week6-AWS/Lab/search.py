@@ -72,14 +72,25 @@ def search(line):
 
 ##  Implements the formula for relevance specified in the assignment -- output is a float.
 ##    Should return 0.0 if the terms list is empty or none of the terms appear in the document   
-
 def compute_doc_relevance(docid, terms):
-    pass
-   
+    total = 0.0
+    for term in terms:
+        total += get_tfidf(docid, term)
+    return total/(len(terms)*1.0)
 ## Input pairs are (docid, tfidf)
 ##    Sort in descending order of tfidf, choose the top five, 
 ##    retrieve the doc title, and truncate tfidf to an integer
 ##    Output is a list of at most 5 pairs of the form (docname, int-tfidf)
    
 def sort_and_limit(pairs):
-    pass
+    sorted_pairs = sorted(pairs, key=lambda x: x[1], reverse=True)
+    top_5_pairs = sorted_pairs[:5]
+    
+    processed_pairs = []
+    for pair in top_5_pairs:
+        docid = pair[0]
+        relevance = int(pair[1])
+        title = get_doc_title(docid)
+        processed_pairs.append((title, relevance))
+    
+    return processed_pairs
